@@ -1,0 +1,85 @@
+Here is a SQL query that shows the work of subqeries:
+
+SELECT 
+    CO1.country,
+    COUNT(DISTINCT C1.customer_id) AS all_customer_count,
+    COUNT(DISTINCT top_5_customers.customer_id) AS top_customer_count
+FROM 
+    customer AS C1
+INNER JOIN 
+    address AS A1 ON A1.address_id = C1.address_id
+INNER JOIN 
+    city AS CI1 ON CI1.city_id = A1.city_id
+INNER JOIN 
+    country AS CO1 ON CO1.country_id = CI1.country_id
+LEFT JOIN
+    (
+        SELECT 
+            C2.customer_ID,
+            C2.first_name,
+            C2.last_name,
+            CI2.city,
+            CO2.country,
+            SUM(P.amount) AS Total_Amount_Paid
+        FROM 
+            payment AS P
+        INNER JOIN 
+            customer AS C2 ON C2.customer_id = P.customer_id
+        INNER JOIN 
+            address AS A2 ON A2.address_id = C2.address_id
+        INNER JOIN 
+            city AS CI2 ON CI2.city_id = A2.city_id
+        INNER JOIN 
+            country AS CO2 ON CO2.country_ID = CI2.country_ID
+        WHERE 
+            CI2.city IN (
+                SELECT 
+                    CI3.city
+                FROM 
+                    customer AS C3
+                INNER JOIN 
+                    address AS A3 ON A3.address_id = C3.address_id
+                INNER JOIN 
+                    city AS CI3 ON CI3.city_id = A3.city_id
+                INNER JOIN 
+                    country AS CO3 ON CO3.country_ID = CI3.country_ID
+                WHERE 
+                    CO3.COUNTRY IN (
+                        SELECT 
+                            CO4.country
+                        FROM 
+                            customer AS C4
+                        INNER JOIN 
+                            address AS A4 ON A4.address_id = C4.address_id
+                        INNER JOIN 
+                            city AS CI4 ON CI4.city_id = A4.city_id
+                        INNER JOIN 
+                            country AS CO4 ON CO4.country_ID = CI4.country_ID
+                        GROUP BY 
+                            CO4.country
+                        ORDER BY 
+                            COUNT(C4.customer_ID) DESC
+                        LIMIT 10
+                    )
+                GROUP BY 
+                    CI3.city
+                ORDER BY 
+                    COUNT(C3.customer_ID) DESC
+                LIMIT 10
+            )
+        GROUP BY 
+            C2.customer_ID, 
+            CI2.city, 
+            C2.first_name, 
+            C2.last_name, 
+            CO2.country
+        ORDER BY 
+            Total_Amount_Paid DESC
+        LIMIT 5
+    ) AS top_5_customers
+ON 
+    C1.customer_id = top_5_customers.customer_id
+GROUP BY 
+    CO1.country
+ORDER BY 
+    all_customer_count DESC;
