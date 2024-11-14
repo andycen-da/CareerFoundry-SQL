@@ -1,0 +1,15 @@
+Here is a SQL query that looks for duplicates in the film table:
+
+SELECT 
+    title,
+    description,
+    release_year,
+    COUNT(*) 
+FROM 
+    film
+GROUP BY 
+    title,
+    description,
+    release_year
+HAVING 
+    COUNT(*) > 1;
